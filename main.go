@@ -1,6 +1,7 @@
 package main
 
 import (
+	"image/color"
 	"math/rand"
 	"strconv"
 	"syscall/js"
@@ -15,14 +16,6 @@ type Square struct {
 // Define a function to log a message to the JavaScript console
 func logToConsole(msg string) {
 	js.Global().Get("console").Call("log", msg)
-}
-
-// Define a function to generate a random RGB color
-func randomColor() string {
-	r := rand.Intn(256)
-	g := rand.Intn(256)
-	b := rand.Intn(256)
-	return "rgb(" + strconv.Itoa(r) + "," + strconv.Itoa(g) + "," + strconv.Itoa(b) + ")"
 }
 
 func main() {
@@ -102,6 +95,12 @@ func main() {
 		return nil
 	}))
 
+	// Set a JavaScript function for clearing all squares, calling the Go function
+	window.Set("clearSquares", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		squares = []Square{}
+		return nil
+	}))
+
 	// Define a function to update the position of all squares and bounce them off the walls
 	updatePosition := func() {
 		for i, s := range squares {
@@ -126,7 +125,7 @@ func main() {
 
 	// Define a function to draw all squares on the canvas
 	drawSquares := func() {
-		ctx.Set("fillStyle", "#f0f0f0")
+		ctx.Set("fillStyle", "#000000")
 		ctx.Call("fillRect", 0, 0, width, height)
 		for _, s := range squares {
 			drawSquare(s)
@@ -147,4 +146,46 @@ func main() {
 
 	// Block the main goroutine from exiting
 	select {}
+}
+
+func randomColor() string {
+	var c color.RGBA
+
+	for {
+		c = color.RGBA{uint8(rand.Intn(256)), uint8(rand.Intn(256)), uint8(rand.Intn(256)), 255}
+
+		r, g, b := int(c.R), int(c.G), int(c.B)
+		max := float64(maxInt(maxInt(r, g), b))
+		min := float64(minInt(minInt(r, g), b))
+		delta := max - min
+
+		// Calculate saturation value using HSL formula
+		var s float64
+		if max != 0 {
+			s = delta / max
+		} else {
+			s = 0
+		}
+
+		if s > 0.6 {
+			break
+		}
+	}
+
+	return "rgb(" + strconv.Itoa(int(c.R)) + "," + strconv.Itoa(int(c.G)) + "," + strconv.Itoa(int(c.B)) + ")"
+}
+
+// Helper functions to calculate min and max values of integers
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

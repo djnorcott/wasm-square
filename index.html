@@ -21,11 +21,38 @@
                 });
                 
                 const canvas = document.getElementById("canvas");
+
+                mouseDown = false;
+
                 canvas.addEventListener('touchstart', (e) => {
                     e.preventDefault(); // Prevent default double-tap zoom behavior
                 }, { passive: false });
 
+                var touches = 0;
+                var justCleared = false;
+
+                const touchStartHandler = (e) => {
+                    touches ++;
+
+                    if (touches == 3) {
+                        clearSquares(e);
+                        justCleared = true;
+                    }
+                };
+
+                const touchEndHandler = (e) => {
+                    touches = e.touches.length;
+                    if (touches === 0) {
+                        justCleared = false;
+                        return;
+                    }
+                    touchAddSquareHandler(e);
+                };
+
                 const touchAddSquareHandler = (e) => {
+                    if (justCleared) {
+                        return;
+                    }
                     const rect = canvas.getBoundingClientRect();
                     const touch = e.changedTouches[0];
                     const x = touch.clientX - rect.left;
@@ -34,14 +61,36 @@
                 };
 
                 const clickAddSquareHandler = (e) => {
+                    mouseDown = true;
                     const rect = canvas.getBoundingClientRect();
                     const x = e.clientX - rect.left;
                     const y = e.clientY - rect.top;
                     window.addSquare(x, y);
                 };
 
-                canvas.addEventListener('touchend', touchAddSquareHandler);
-                canvas.addEventListener('click', clickAddSquareHandler);
+                const moveAddSquareHandler = (e) => {
+                    if (mouseDown) {
+                       clickAddSquareHandler(e);
+                    }
+                };
+
+                const mouseUpHandler = (e) => {
+                    mouseDown = false;
+                };
+
+                const clearSquares = (e) => {
+                    e.preventDefault();
+                    window.clearSquares();
+                }
+
+                canvas.addEventListener('touchstart', touchStartHandler);
+                canvas.addEventListener('touchend', touchEndHandler);
+                canvas.addEventListener('touchmove', touchAddSquareHandler, { passive: false });
+
+                canvas.addEventListener('mousedown', clickAddSquareHandler);
+                canvas.addEventListener('mousemove', moveAddSquareHandler, { passive: false });
+                canvas.addEventListener('mouseup', mouseUpHandler);
+                window.addEventListener('contextmenu', clearSquares)
 
                 window.resizeCanvas(window.innerWidth, window.innerHeight);
 
@@ -50,7 +99,7 @@
         }
     </script>
 </head>
-<body onload="init()">
+<body onload="init()"></body>
     <canvas id="canvas" width="800" height="600"></canvas>
     <script src="wasm_exec.js"></script>
 </body>
