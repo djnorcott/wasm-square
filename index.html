@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>WASM Go Bouncing Squares</title>
+    <style>
+        html, body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+    <script>
+        function init() {
+            const go = new Go();
+            WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
+                go.run(result.instance);
+                window.addEventListener('resize', () => {
+                    window.resizeCanvas(window.innerWidth, window.innerHeight);
+                });
+                
+                const canvas = document.getElementById("canvas");
+                canvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault(); // Prevent default double-tap zoom behavior
+                }, { passive: false });
+
+                const touchAddSquareHandler = (e) => {
+                    const rect = canvas.getBoundingClientRect();
+                    const touch = e.changedTouches[0];
+                    const x = touch.clientX - rect.left;
+                    const y = touch.clientY - rect.top;
+                    window.addSquare(x, y);
+                };
+
+                const clickAddSquareHandler = (e) => {
+                    const rect = canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    window.addSquare(x, y);
+                };
+
+                canvas.addEventListener('touchend', touchAddSquareHandler);
+                canvas.addEventListener('click', clickAddSquareHandler);
+
+                window.resizeCanvas(window.innerWidth, window.innerHeight);
+
+                
+            });
+        }
+    </script>
+</head>
+<body onload="init()">
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <script src="wasm_exec.js"></script>
+</body>
+</html>
