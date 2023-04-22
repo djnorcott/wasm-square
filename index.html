@@ -12,7 +12,9 @@
     <script>
         function init() {
             const go = new Go();
-            WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
+            const wasmUrl = "main.wasm?" + Date.now(); // Add cache-busting query parameter
+            
+            WebAssembly.instantiateStreaming(fetch(wasmUrl), go.importObject).then((result) => {
                 go.run(result.instance);
                 window.addEventListener('resize', () => {
                     window.resizeCanvas(window.innerWidth, window.innerHeight);
