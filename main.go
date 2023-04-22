@@ -56,7 +56,7 @@ func main() {
 	}))
 
 	addSquare := func(x, y float64) {
-		size := rand.Float64()*100 + 50
+		size := rand.Float64()*150 + 20
 		color := randomColor()
 		speed := 14.0 - (size-50)/50*7.0 // Smaller squares will have a faster speed
 
